@@ -9,14 +9,11 @@ import Combine
 import Foundation
 
 struct RocketLaunchClient {
-    enum FilterType {
-        case rocket, lsp, location
+    enum Filter {
+        case rocket(query: String)
+        case lsp(query: String) // lsp is launch service provider
+        case location(query: String)
     }
-    
-    struct FilterInfo {
-        var filterType: FilterType?
-        var query: String
-    }
-    
-    var launches: (FilterInfo) -> AnyPublisher<ListResponse, Error>
+
+    var launches: (Filter?) -> AnyPublisher<ListResponse, Error>
 }

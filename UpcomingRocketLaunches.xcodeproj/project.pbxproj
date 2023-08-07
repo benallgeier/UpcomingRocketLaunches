@@ -27,8 +27,8 @@
 		431D59F22A7EF84F0085B01E /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		431D59F92A7F1C720085B01E /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
 		431D59FB2A8038E80085B01E /* UpcomingRocketLaunchesViewModel.swift */ = {isa = PBXFileReference; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = UpcomingRocketLaunchesViewModel.swift; sourceTree = "<group>"; tabWidth = 4; };
-		431D59FE2A8158EA0085B01E /* Client.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Client.swift; sourceTree = "<group>"; };
-		431D5A002A8159170085B01E /* Live.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Live.swift; sourceTree = "<group>"; };
+		431D59FE2A8158EA0085B01E /* Client.swift */ = {isa = PBXFileReference; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = Client.swift; sourceTree = "<group>"; tabWidth = 4; };
+		431D5A002A8159170085B01E /* Live.swift */ = {isa = PBXFileReference; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = Live.swift; sourceTree = "<group>"; tabWidth = 4; };
 		431D5A022A8159BC0085B01E /* Mocks.swift */ = {isa = PBXFileReference; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = Mocks.swift; sourceTree = "<group>"; tabWidth = 4; };
 		F3B666832A80308200CAF78A /* Models.swift */ = {isa = PBXFileReference; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; tabWidth = 4; };
 /* End PBXFileReference section */

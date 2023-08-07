@@ -8,15 +8,14 @@
 import Foundation
 
 struct ListResponse: Decodable {
-    var count: Int // Do we need - pagination?
-    var next: String? // Inspect if nil is what we get when we get to last page
+    var next: String? // Use for pagination
     var results: [Result]
     
     struct Result: Decodable, Identifiable, Hashable {
         private enum CodingKeys: String, CodingKey {
             case name, image, location
             case windowStart = "window_start"
-            case lspName = "lsp_name" // for filtering
+            case lspName = "lsp_name" // for filtering - remove when done
         }
         
         var name: String
@@ -44,12 +43,11 @@ struct ListResponse: Decodable {
 
 extension ListResponse {
     static var empty: Self {
-        Self(count: 0, results: [])
+        Self(results: [])
     }
     
     static var mock: Self {
         Self(
-            count: 2,
             results: [
                 .init(
                     name: "Falcon 9 Block 5 | Starlink Group 6-8",

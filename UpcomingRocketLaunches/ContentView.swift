@@ -11,17 +11,16 @@ struct ContentView: View {
     @ObservedObject var viewModel: UpcomingRocketLaunchesViewModel
     
     
-    enum FilterOption: String, CaseIterable, Identifiable {
-        var id: Self { self }
-        
+    private enum FilterOption: String, CaseIterable, Identifiable {
         case none = "None"
         case rocket = "Rocket"
         case lsp = "LSP"
         case location = "Location"
+        
+        var id: Self { self }
     }
     
     @State private var filterOption = FilterOption.none
-    
     @State private var filterString = ""
 
     var body: some View {
@@ -59,10 +58,25 @@ struct ContentView: View {
                 }
             }
             .navigationTitle("Rocket Launches")
+            .onAppear {
+                viewModel.refreshRocketLaunches(for: nil)
+            }
             .searchable(text: $filterString, prompt: "Filter")
             .onSubmit(of: .search) {
                 print("Ben: Submitted")
-//                viewModel.fetch(with: filterOption, query: filterString)
+                let filterInfo: RocketLaunchClient.Filter?
+                switch filterOption {
+                case .none:
+                    filterInfo = nil
+                case .rocket:
+                    filterInfo = .rocket(query: filterString)
+                case .lsp:
+                    filterInfo = .lsp(query: filterString)
+                case .location:
+                    filterInfo = .location(query: filterString)
+                }
+                
+                viewModel.refreshRocketLaunches(for: filterInfo)
             }
         }
     }
