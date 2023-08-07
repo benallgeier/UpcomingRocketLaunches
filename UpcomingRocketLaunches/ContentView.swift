@@ -5,52 +5,99 @@
 //  Created by Benjamin Allgeier on 8/5/23.
 //
 
-//# Upcoming Rocket Launches - iOS Application
-//
-//## PROJECT DESCRIPTION
-//You are to create an iOS Application that utilizes the Space Devs API to provide users with information about upcoming Rocket Launches.
-
-
-//### API Information
-//* API Endpoint: https://ll.thespacedevs.com/2.2.0/launch/upcoming/
-//* API Documentation: https://ll.thespacedevs.com/docs/
-//
-//## REQUIREMENTS
-//1. The app should have a home screen that displays a list of upcoming launches retrieved from the Launch Library 2 API.
-//    - Each list item should show the name, location, launch window start time, and a thumbnail image (if available).
-//2. On the home screen launches should be sorted by launch window start time
-//3. Tapping on a launch in the list should lead to a detail screen that displays more inofmration about the selected launch
-//4. Users should have the ability to filter the launches based on the rocket name, launch service provider, and launch location.
-//
-//### TECHNICAL REQUIREMENTS
-//1. Use Swift as the primary programming language for the app.
-//2. Use UIKit or SwiftUI to build the UI for the app.
-//3. Extract only the necessary data from the API response.
-//4. Apply proper error handling to manage potential API errors and connectivity issues.
-
-//## SUBMISSION
-//* Create a public GitHub repository and commit your code regularly during development.
-//* Include a README file detailing the steps to run the app and any additional notes or explanations.
-//* Submit the link to your GitHub repository and any additional asses(e.g., screenshots, video demo) you would like to share.
-
-
 import SwiftUI
 
 struct ContentView: View {
+    @ObservedObject var viewModel: UpcomingRocketLaunchesViewModel
+    
+    
+    enum FilterOption: String, CaseIterable, Identifiable {
+        var id: Self { self }
+        
+        case none = "None"
+        case rocket = "Rocket"
+        case lsp = "LSP"
+        case location = "Location"
+    }
+    
+    @State private var filterOption = FilterOption.none
+    
+    @State private var filterString = ""
+
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundColor(.accentColor)
-            Text("Hello, world!")
+        NavigationStack {
+            VStack {
+                Picker("Choose a filter", selection: $filterOption) {
+                    ForEach(FilterOption.allCases) { filter in
+                        Text("\(filter.rawValue)").tag(filter)
+                    }
+                }
+                .pickerStyle(.segmented)
+                
+                List(viewModel.response.results) { result in
+                    NavigationLink(value: result, label: {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(result.name)
+                                .font(.title)
+                            Text(result.location)
+                                .font(.title2)
+                                .foregroundColor(Color.blue)
+                            Text(result.lspName)
+                                .foregroundColor(Color.green)
+                            
+                            asyncImage(for: result.image)
+                            
+                            Text(result.windowStartFormatted)
+                                .bold()
+                                .foregroundColor(Color.red)
+                        }
+                    })
+                }
+                .listStyle(.plain)
+                .navigationDestination(for: ListResponse.Result.self) { result in
+                    Text(result.name)
+                }
+            }
+            .navigationTitle("Rocket Launches")
+            .searchable(text: $filterString, prompt: "Filter")
+            .onSubmit(of: .search) {
+                print("Ben: Submitted")
+//                viewModel.fetch(with: filterOption, query: filterString)
+            }
         }
-        .padding()
+    }
+    
+    @ViewBuilder func asyncImage(for url: String?) -> some View {
+        if let urlString = url,
+           let url = URL(string: urlString) {
+            AsyncImage(
+                url: url,
+                content: { image in
+                    image.resizable().aspectRatio(contentMode: .fit)
+                },
+                placeholder: { imagePlaceHolder }
+            )
+        } else {
+            imagePlaceHolder
+        }
+    }
+    
+    var imagePlaceHolder: some View {
+        Color.gray.opacity(0.5)
+            .frame(height: 128)
+            .clipShape(RoundedRectangle(cornerRadius: 25))
+            .overlay {
+                Text("No image available")
+            }
     }
 }
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView()
+        ContentView(
+            viewModel: .init(
+                rocketLaunchClient: .mock
+            )
+        )
     }
 }
-

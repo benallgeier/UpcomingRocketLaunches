@@ -11,7 +11,11 @@ import SwiftUI
 struct UpcomingRocketLaunchesApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+          ContentView(
+            viewModel: .init(
+              rocketLaunchClient: .live
+            )
+          )
         }
     }
 }
