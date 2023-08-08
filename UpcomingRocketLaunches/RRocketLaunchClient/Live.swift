@@ -12,7 +12,7 @@ import Foundation
 extension RocketLaunchClient {
     static let live = Self(
         launches: { filter in
-            let url = getUrl(from: filter)
+            let url = url(for: filter)
             if case .location = filter {
                 // 1. Make location service for name__contains to get back location ids
                 // 2. Make rocket launch service with location__ids with comma separated values of ids
@@ -41,17 +41,32 @@ extension RocketLaunchClient {
     )
 }
 
+// MARK: - API Helpers
+
 // TODO: Handle errors and reduce force unwrapping
 extension RocketLaunchClient {
+    // These are for filtering rocket launches
     enum Query {
         case rocket(query: String)
         case lsp(query: String)
         case locationIDs(query: String)
+        
+        var queryItem: URLQueryItem {
+            switch self {
+            case let .rocket(query):
+                return getRocketQueryItem(value: query)
+            case let .lsp(query):
+                return getLSPQueryItem(value: query)
+            case let .locationIDs(query):
+                return getLocationIDsQueryItem(value: query)
+            }
+        }
     }
 
     // MARK: - URLs
     
-    static func getUrl(from filter: Filter?) -> URL {
+    // Returns either a url for rocket launches or for locations
+    static func url(for filter: Filter?) -> URL {
         switch filter {
         case let .rocket(query):
             return rocketLaunchUrl(query: .rocket(query: query))
@@ -67,44 +82,29 @@ extension RocketLaunchClient {
     // Use ll or lldev
     static let baseUrl = URL(string: "https://lldev.thespacedevs.com/2.2.0/")!
     
-    // Do not use this for the .location filter
     static func rocketLaunchUrl(query: Query?) -> URL {
         var components = URLComponents(
             url: URL(string: "launch/upcoming", relativeTo: baseUrl)!,
-            resolvingAgainstBaseURL: true)!
+            resolvingAgainstBaseURL: true
+        )!
         components.queryItems = [
             modeQueryItem, limitQueryItem, orderingQueryItem
         ]
         
         // Add additional queryItems
-        switch query {
-        case let .rocket(query):
-            components.queryItems?.append(
-                getRocketQueryItem(value: query)
-            )
-        case let .lsp(query):
-            components.queryItems?.append(
-                getLSPQueryItem(value: query)
-            )
-        case let .locationIDs(query):
-            components.queryItems?.append(
-                getLocationIDsQueryItem(value: query)
-            )
-        case .none:
-            break
+        if let query {
+            components.queryItems?.append(query.queryItem)
         }
-        
         return components.url!
     }
     
-    // Use this for the .location filter
     static func locationUrl(query value: String) -> URL {
         var components = URLComponents(
             url: URL(string: "location", relativeTo: baseUrl)!,
             resolvingAgainstBaseURL: true
         )!
         components.queryItems = [
-            getLocationsQueryItem(value: value)
+            getLocationNameContainsQueryItem(value: value),
         ]
         return components.url!
     }
@@ -112,7 +112,7 @@ extension RocketLaunchClient {
     // MARK: - Static Queries
     
     static let modeQueryItem = URLQueryItem(name: "mode", value: "list")
-    static let limitQueryItem = URLQueryItem(name: "limit", value: "25")
+    static let limitQueryItem = URLQueryItem(name: "limit", value: "4")
     // Ordering with `window_start` did not seem to work. So using `net` which does work with sorting. Note the values for `net` and `window_start` are sometimes the same and sometimes not the same.
     static let orderingQueryItem = URLQueryItem(name: "ordering", value: "net")
     
@@ -134,9 +134,9 @@ extension RocketLaunchClient {
         URLQueryItem(name: "location__ids", value: value)
     }
     
-    // Location Queries
+    // MARK: - Location API Helpers
     
-    static func getLocationsQueryItem(value: String) -> URLQueryItem {
+    static func getLocationNameContainsQueryItem(value: String) -> URLQueryItem {
         URLQueryItem(name: "name__contains", value: value)
     }
     

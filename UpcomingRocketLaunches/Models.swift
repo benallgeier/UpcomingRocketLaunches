@@ -8,12 +8,12 @@
 import Foundation
 
 struct ListResponse: Decodable {
-    var next: String? // Use for pagination
+    var next: String? // could use for pagination
     var results: [Result]
     
     struct Result: Decodable, Identifiable, Hashable {
         private enum CodingKeys: String, CodingKey {
-            case name, image, location
+            case name, image, location, mission, pad
             case windowStart = "window_start"
             case lspName = "lsp_name" // for filtering - remove when done
         }
@@ -26,7 +26,11 @@ struct ListResponse: Decodable {
             guard let date = iso8601DateFormatter.date(from: windowStart) else { return "No launch date available" }
             return userVisibleDateFormatter.string(from: date)
         }
+        
+        // For Detail screen
         var lspName: String
+        var mission: String?
+        var pad: String?
         
         var id: String { name }
         
@@ -54,21 +58,27 @@ extension ListResponse {
                     image: "https://spacelaunchnow-prod-east.nyc3.digitaloceanspaces.com/media/launch_images/falcon2520925_image_20230522082133.png",
                     location: "Cape Canaveral, FL, USA",
                     windowStart: "2023-08-07T01:00:00Z",
-                    lspName: "SpaceX"
+                    lspName: "SpaceX",
+                    mission: "Starlink Group 6-8",
+                    pad: "Space Launch Complex 40"
                 ),
                 .init(
                     name: "Soyuz 2.1b/Fregat-M | Glonass-K2 No. 13",
                     image: "https://spacelaunchnow-prod-east.nyc3.digitaloceanspaces.com/media/launcher_images/soyuz_2.1b2ffr_image_20230802085359.jpg",
                     location: "Plesetsk Cosmodrome, Russian Federation",
                     windowStart: "2023-08-07T12:00:00Z",
-                    lspName: "Russian Space Forces"
+                    lspName: "Russian Space Forces",
+                    mission: "Starlink Group 6-8",
+                    pad: "Space Launch Complex 40"
                 ),
                 .init(
                     name: "Falcon 9 Block 5 | Starlink Group 6-20",
                     image: "https://spacelaunchnow-prod-east.nyc3.digitaloceanspaces.com/media/launch_images/falcon2520925_image_20230522092711.png",
                     location: "Vandenberg SFB, CA, USA",
                     windowStart: "2023-08-08T03:57:00Z",
-                    lspName: "SpaceX"
+                    lspName: "SpaceX",
+                    mission: "Starlink Group 6-8",
+                    pad: "Space Launch Complex 40"
                 )
             ]
         )

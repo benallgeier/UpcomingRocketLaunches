@@ -10,7 +10,6 @@ import SwiftUI
 struct ContentView: View {
     @ObservedObject var viewModel: UpcomingRocketLaunchesViewModel
     
-    
     private enum FilterOption: String, CaseIterable, Identifiable {
         case none = "None"
         case rocket = "Rocket"
@@ -22,63 +21,95 @@ struct ContentView: View {
     
     @State private var filterOption = FilterOption.none
     @State private var filterString = ""
-
+    
     var body: some View {
         NavigationStack {
-            VStack {
-                Picker("Choose a filter", selection: $filterOption) {
-                    ForEach(FilterOption.allCases) { filter in
-                        Text("\(filter.rawValue)").tag(filter)
+            Group {
+                switch viewModel.state {
+                case .idle:
+                    Color.clear.onAppear {
+                        viewModel.refreshRocketLaunches(for: nil)
                     }
-                }
-                .pickerStyle(.segmented)
-                
-                List(viewModel.response.results) { result in
-                    NavigationLink(value: result, label: {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(result.name)
-                                .font(.title)
-                            Text(result.location)
-                                .font(.title2)
-                                .foregroundColor(Color.blue)
-                            Text(result.lspName)
-                                .foregroundColor(Color.green)
-                            
-                            asyncImage(for: result.image)
-                            
-                            Text(result.windowStartFormatted)
-                                .bold()
-                                .foregroundColor(Color.red)
+                case .loading:
+                    ProgressView()
+                case .failed(let error):
+                    Text("Error occurred: \(error.localizedDescription)")
+                case .loaded(let listResponse):
+                    loadedView(listResponse: listResponse)
+                    .searchable(text: $filterString, prompt: "Filter")
+                    .onSubmit(of: .search) {
+                        let filterInfo: RocketLaunchClient.Filter?
+                        switch filterOption {
+                        case .none:
+                            filterInfo = nil
+                        case .rocket:
+                            filterInfo = .rocket(query: filterString)
+                        case .lsp:
+                            filterInfo = .lsp(query: filterString)
+                        case .location:
+                            filterInfo = .location(query: filterString)
                         }
-                    })
-                }
-                .listStyle(.plain)
-                .navigationDestination(for: ListResponse.Result.self) { result in
-                    Text(result.name)
+                        
+                        viewModel.refreshRocketLaunches(for: filterInfo)
+                    }
+
                 }
             }
             .navigationTitle("Rocket Launches")
-            .onAppear {
-                viewModel.refreshRocketLaunches(for: nil)
-            }
-            .searchable(text: $filterString, prompt: "Filter")
-            .onSubmit(of: .search) {
-                print("Ben: Submitted")
-                let filterInfo: RocketLaunchClient.Filter?
-                switch filterOption {
-                case .none:
-                    filterInfo = nil
-                case .rocket:
-                    filterInfo = .rocket(query: filterString)
-                case .lsp:
-                    filterInfo = .lsp(query: filterString)
-                case .location:
-                    filterInfo = .location(query: filterString)
+        }
+    }
+    
+    @ViewBuilder func loadedView(listResponse: ListResponse) -> some View {
+        VStack {
+            Picker("Choose a filter", selection: $filterOption) {
+                ForEach(FilterOption.allCases) { filter in
+                    Text("\(filter.rawValue)").tag(filter)
                 }
-                
-                viewModel.refreshRocketLaunches(for: filterInfo)
+            }
+            .pickerStyle(.segmented)
+            
+            List(listResponse.results) { result in
+                NavigationLink(value: result, label: {
+                    itemView(result: result)
+                })
+            }
+            .listStyle(.plain)
+            .navigationDestination(for: ListResponse.Result.self) { result in
+                detailView(result: result)
             }
         }
+    }
+    
+    @ViewBuilder func itemView(result: ListResponse.Result) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(result.name)
+                .font(.title)
+            Text(result.location)
+                .font(.title2)
+                .foregroundColor(Color.blue)
+            
+            asyncImage(for: result.image)
+            
+            Text(result.windowStartFormatted)
+                .bold()
+                .foregroundColor(Color.red)
+        }
+    }
+    
+    @ViewBuilder func detailView(result: ListResponse.Result) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            itemView(result: result)
+            Group {
+                if let mission = result.mission {
+                    Text("Mission: \(mission)")
+                }
+                if let pad = result.pad {
+                    Text("Pad: \(pad)")
+                }
+            }
+            .font(.headline)
+        }
+        .padding()
     }
     
     @ViewBuilder func asyncImage(for url: String?) -> some View {
