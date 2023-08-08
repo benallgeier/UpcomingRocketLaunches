@@ -12,7 +12,10 @@ import Foundation
 extension RocketLaunchClient {
     static let live = Self(
         launches: { filter in
-            let url = url(for: filter)
+            guard let url = url(for: filter) else {
+                return Fail(outputType: ListResponse.self, failure: URLError(.badURL))
+                    .eraseToAnyPublisher()
+            }
             if case .location = filter {
                 // 1. Make location service for name__contains to get back location ids
                 // 2. Make rocket launch service with location__ids with comma separated values of ids
@@ -22,10 +25,17 @@ extension RocketLaunchClient {
                     .flatMap({ locationResponse in
                         let ids = locationResponse.results.map { $0.id }
                         let query = ids.map{String($0)}.joined(separator: ",")
-                        let url = rocketLaunchUrl(query: .locationIDs(query: query))
+                        guard let url = rocketLaunchUrl(query: .locationIDs(query: query)) else {
+                            return Fail(outputType: ListResponse.self, failure: URLError(.badURL))
+                                .mapError({ (error: URLError) -> Error in
+                                    return error
+                                })
+                                .eraseToAnyPublisher()
+                        }
                         return URLSession.shared.dataTaskPublisher(for: url)
                             .map { data, _ in data }
                             .decode(type: ListResponse.self, decoder: JSONDecoder())
+                            .map(Self.sort(listResponse:))
                             .receive(on: DispatchQueue.main)
                             .eraseToAnyPublisher()
                     })
@@ -34,6 +44,7 @@ extension RocketLaunchClient {
                 return URLSession.shared.dataTaskPublisher(for: url)
                     .map { data, _ in data }
                     .decode(type: ListResponse.self, decoder: JSONDecoder())
+                    .map(Self.sort(listResponse:))
                     .receive(on: DispatchQueue.main)
                     .eraseToAnyPublisher()
             }
@@ -66,7 +77,7 @@ extension RocketLaunchClient {
     // MARK: - URLs
     
     // Returns either a url for rocket launches or for locations
-    static func url(for filter: Filter?) -> URL {
+    static func url(for filter: Filter?) -> URL? {
         switch filter {
         case let .rocket(query):
             return rocketLaunchUrl(query: .rocket(query: query))
@@ -80,41 +91,53 @@ extension RocketLaunchClient {
     }
 
     // Use ll or lldev
-    static let baseUrl = URL(string: "https://lldev.thespacedevs.com/2.2.0/")!
+    static let baseUrl = URL(string: "https://lldev.thespacedevs.com/2.2.0/")
     
-    static func rocketLaunchUrl(query: Query?) -> URL {
-        var components = URLComponents(
-            url: URL(string: "launch/upcoming", relativeTo: baseUrl)!,
-            resolvingAgainstBaseURL: true
-        )!
+    static func rocketLaunchUrl(query: Query?) -> URL? {
+        guard let baseUrl = baseUrl,
+              let launchUrl = URL(string: "launch/upcoming", relativeTo: baseUrl),
+              var components = URLComponents(url: launchUrl, resolvingAgainstBaseURL: true)
+        else { return nil }
         components.queryItems = [
-            modeQueryItem, limitQueryItem, orderingQueryItem
+            modeQueryItem, limitQueryItem
         ]
         
         // Add additional queryItems
         if let query {
             components.queryItems?.append(query.queryItem)
         }
-        return components.url!
+        return components.url
     }
     
-    static func locationUrl(query value: String) -> URL {
-        var components = URLComponents(
-            url: URL(string: "location", relativeTo: baseUrl)!,
-            resolvingAgainstBaseURL: true
-        )!
+    static func locationUrl(query value: String) -> URL? {
+        guard let baseUrl = baseUrl,
+              let locationUrl = URL(string: "location", relativeTo: baseUrl),
+              var components = URLComponents(url: locationUrl, resolvingAgainstBaseURL: true)
+        else { return nil }
         components.queryItems = [
             getLocationNameContainsQueryItem(value: value),
         ]
-        return components.url!
+        return components.url
     }
     
     // MARK: - Static Queries
     
     static let modeQueryItem = URLQueryItem(name: "mode", value: "list")
-    static let limitQueryItem = URLQueryItem(name: "limit", value: "4")
-    // Ordering with `window_start` did not seem to work. So using `net` which does work with sorting. Note the values for `net` and `window_start` are sometimes the same and sometimes not the same.
+    static let limitQueryItem = URLQueryItem(name: "limit", value: "25")
+    // Ordering with `window_start` did not seem to work. So maybe could use `net` which does work with sorting. Note the values for `net` and `window_start` are sometimes the same and sometimes not the same. And not sure what net means
     static let orderingQueryItem = URLQueryItem(name: "ordering", value: "net")
+    
+    // To handle this, we will sort the array we get
+    static func sort(listResponse: ListResponse) -> ListResponse {
+        var results = listResponse.results
+        results.sort(by: { lResult, rResult in
+            guard let lDate = lResult.windowStartDate,
+                  let rDate = rResult.windowStartDate
+            else { return true }
+            return lDate.compare(rDate) == .orderedAscending
+        })
+        return ListResponse(next: listResponse.next, results: results)
+    }
     
     // MARK: - Dynamic Queries
     
