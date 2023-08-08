@@ -91,7 +91,7 @@ extension RocketLaunchClient {
     }
 
     // Use ll or lldev
-    static let baseUrl = URL(string: "https://lldev.thespacedevs.com/2.2.0/")
+    static let baseUrl = URL(string: "https://ll.thespacedevs.com/2.2.0/")
     
     static func rocketLaunchUrl(query: Query?) -> URL? {
         guard let baseUrl = baseUrl,
