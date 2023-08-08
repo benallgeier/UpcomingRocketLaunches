@@ -8,7 +8,6 @@
 import Combine
 import Foundation
 
-// TODO: Handle forceunwrapping and sending errors
 extension RocketLaunchClient {
     static let live = Self(
         launches: { filter in
@@ -54,7 +53,6 @@ extension RocketLaunchClient {
 
 // MARK: - API Helpers
 
-// TODO: Handle errors and reduce force unwrapping
 extension RocketLaunchClient {
     // These are for filtering rocket launches
     enum Query {
