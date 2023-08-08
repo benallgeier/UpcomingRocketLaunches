@@ -68,7 +68,7 @@
 				431D59ED2A7EF84F0085B01E /* ContentView.swift */,
 				431D59FB2A8038E80085B01E /* UpcomingRocketLaunchesViewModel.swift */,
 				F3B666832A80308200CAF78A /* Models.swift */,
-				431D59FD2A8158C10085B01E /* RRocketLaunchClient */,
+				431D59FD2A8158C10085B01E /* RocketLaunchClient */,
 				431D59EF2A7EF84F0085B01E /* Assets.xcassets */,
 				431D59F12A7EF84F0085B01E /* Preview Content */,
 			);
@@ -83,14 +83,14 @@
 			path = "Preview Content";
 			sourceTree = "<group>";
 		};
-		431D59FD2A8158C10085B01E /* RRocketLaunchClient */ = {
+		431D59FD2A8158C10085B01E /* RocketLaunchClient */ = {
 			isa = PBXGroup;
 			children = (
 				431D59FE2A8158EA0085B01E /* Client.swift */,
 				431D5A002A8159170085B01E /* Live.swift */,
 				431D5A022A8159BC0085B01E /* Mocks.swift */,
 			);
-			path = RRocketLaunchClient;
+			path = RocketLaunchClient;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
