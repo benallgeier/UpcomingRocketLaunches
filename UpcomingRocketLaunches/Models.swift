@@ -38,7 +38,7 @@ struct ListResponse: Decodable {
         
         var id: String { name }
         
-        let iso8601DateFormatter = ISO8601DateFormatter()
+        private let iso8601DateFormatter = ISO8601DateFormatter()
         private let userVisibleDateFormatter = {
             let formatter = DateFormatter()
             formatter.locale = Locale.init(identifier: "en_US_POSIX")
